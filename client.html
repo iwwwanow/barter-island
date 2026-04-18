@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Остров бартера</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #f8f6f0;
+      --surface: #ffffff;
+      --border:  #e2d9cc;
+      --accent:  #4f7942;
+      --red:     #c0392b;
+      --yellow:  #e67e22;
+      --text:    #2c2c2c;
+      --muted:   #888;
+      --radius:  10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background:  var(--bg);
+      color:       var(--text);
+      padding:     1rem;
+      max-width:   720px;
+      margin:      0 auto;
+    }
+
+    h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+    h2 { font-size: 1rem; text-transform: uppercase;
+         letter-spacing: .05em; color: var(--muted); margin-bottom: .6rem; }
+
+    .card {
+      background:    var(--surface);
+      border:        1px solid var(--border);
+      border-radius: var(--radius);
+      padding:       1rem;
+      margin-bottom: 1rem;
+    }
+
+    .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+
+    input, select {
+      border:        1px solid var(--border);
+      border-radius: 6px;
+      padding:       .4rem .7rem;
+      font-size:     .9rem;
+      background:    var(--bg);
+      color:         var(--text);
+      outline:       none;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    input.wide { flex: 1; min-width: 140px; }
+
+    button {
+      padding:       .45rem 1rem;
+      border:        none;
+      border-radius: 6px;
+      font-size:     .88rem;
+      font-weight:   600;
+      cursor:        pointer;
+      transition:    opacity .15s;
+      white-space:   nowrap;
+    }
+    button:hover    { opacity: .85; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-green  { background: var(--accent); color: #fff; }
+    .btn-red    { background: var(--red);    color: #fff; }
+    .btn-orange { background: var(--yellow); color: #fff; }
+    .btn-ghost  { background: #eee; color: var(--text); }
+
+    /* ── Инвентарь ─────────────────────────────────────────────────────── */
+    .goods-grid {
+      display:               grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:                   .5rem;
+      margin-bottom:         .75rem;
+    }
+    @media (max-width: 480px) { .goods-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .good-tile {
+      background:    var(--bg);
+      border:        2px solid var(--border);
+      border-radius: 8px;
+      padding:       .6rem .4rem;
+      text-align:    center;
+      font-size:     .82rem;
+    }
+    .good-tile .icon  { font-size: 1.5rem; display: block; }
+    .good-tile .qty   { font-size: 1.2rem; font-weight: 700; }
+    .good-tile .name  { color: var(--muted); }
+    .good-tile.needed { border-color: var(--yellow); background: #fff8f0; }
+    .good-tile.met    { border-color: var(--accent); background: #f0fff5; }
+
+    /* ── Цель ─────────────────────────────────────────────────────────── */
+    .goal-row {
+      display:   flex;
+      gap:       .5rem;
+      flex-wrap: wrap;
+    }
+    .goal-chip {
+      padding:       .3rem .7rem;
+      border-radius: 99px;
+      font-size:     .82rem;
+      font-weight:   600;
+      background:    #fff8f0;
+      border:        1px solid var(--yellow);
+      color:         var(--yellow);
+    }
+    .goal-chip.met {
+      background: #f0fff5;
+      border-color: var(--accent);
+      color:        var(--accent);
+    }
+
+    /* ── Сделки ───────────────────────────────────────────────────────── */
+    .trade-item {
+      border:        1px solid var(--border);
+      border-radius: 8px;
+      padding:       .75rem;
+      margin-bottom: .5rem;
+      background:    var(--bg);
+    }
+    .trade-item:last-child { margin-bottom: 0; }
+    .trade-header { font-weight: 600; margin-bottom: .4rem; }
+    .trade-desc   { font-size: .85rem; color: var(--muted); margin-bottom: .5rem; }
+    .trade-btns   { display: flex; gap: .4rem; }
+
+    /* ── События ─────────────────────────────────────────────────────── */
+    #eventLog {
+      height:      150px;
+      overflow-y:  auto;
+      font-size:   .82rem;
+      line-height: 1.7;
+      color:       var(--muted);
+      font-family: monospace;
+    }
+    .ev-new { color: var(--text); font-weight: 600; }
+    .ev-time { color: var(--border); margin-right: .3rem; }
+
+    /* ── Статус подключения ───────────────────────────────────────────── */
+    .dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: .3rem;
+    }
+    .dot-green { background: var(--accent); }
+    .dot-red   { background: var(--red); }
+
+    .winner-banner {
+      background:    #f0fff5;
+      border:        2px solid var(--accent);
+      border-radius: var(--radius);
+      padding:       1rem;
+      text-align:    center;
+      font-size:     1.1rem;
+      font-weight:   700;
+      color:         var(--accent);
+      margin-bottom: 1rem;
+      display:       none;
+    }
+
+    .section-empty { color: var(--muted); font-size: .88rem; }
+
+    /* ── Форма предложения сделки ─────────────────────────────────────── */
+    .trade-form label { font-size: .82rem; color: var(--muted); display: block; margin-bottom: .2rem; }
+    .trade-form .field { margin-bottom: .6rem; }
+    .trade-form .half  { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── Вход ──────────────────────────────────────────────────────────────── -->
+<div id="loginSection" class="card">
+  <h1>🪸 Остров бартера</h1>
+  <p style="color:var(--muted);margin:.5rem 0 1rem">Введи адрес сервера и своё имя, чтобы войти в игру.</p>
+
+  <div class="row" style="margin-bottom:.5rem">
+    <input type="text" id="serverUrl" class="wide" value="http://localhost:3000" placeholder="Адрес сервера">
+  </div>
+  <div class="row">
+    <input type="text" id="nameInput" class="wide" placeholder="Твоё имя" maxlength="32"
+           onkeydown="if(event.key==='Enter') joinGame()">
+    <button class="btn-green" onclick="joinGame()">Войти в игру</button>
+  </div>
+  <div id="loginError" style="color:var(--red);font-size:.85rem;margin-top:.5rem"></div>
+</div>
+
+<!-- ── Игровой экран ─────────────────────────────────────────────────────── -->
+<div id="gameSection" style="display:none">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+    <h1>🪸 <span id="playerNameDisplay"></span></h1>
+    <div style="font-size:.82rem;color:var(--muted)">
+      <span id="wsIndicator" class="dot dot-red"></span>
+      <span id="wsStatus">Не подключён</span>
+      &nbsp;|&nbsp;
+      Раунд <b id="roundDisplay">—</b>
+      &nbsp;|&nbsp;
+      <span id="currencyStatus" style="display:none">🐚 <b id="balanceDisplay">0</b> ракушек</span>
+    </div>
+  </div>
+
+  <!-- Баннер победы -->
+  <div class="winner-banner" id="winnerBanner">
+    🏆 Ты выполнил цель! Молодец!
+  </div>
+
+  <!-- Инвентарь -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+      <h2 style="margin:0">Мой инвентарь</h2>
+      <button class="btn-ghost" style="font-size:.78rem;padding:.25rem .6rem" onclick="refresh()">↻ Обновить</button>
+    </div>
+    <div class="goods-grid" id="inventoryGrid"></div>
+
+    <div style="margin-top:.25rem">
+      <h2>Моя цель</h2>
+      <div class="goal-row" id="goalRow"></div>
+    </div>
+  </div>
+
+  <!-- Предложить сделку -->
+  <div class="card">
+    <h2>Предложить сделку</h2>
+    <div class="trade-form">
+
+      <div class="field">
+        <label>Кому предлагаешь</label>
+        <select id="toPlayerSelect" class="wide"></select>
+      </div>
+
+      <div class="half">
+        <div>
+          <label>Я отдаю — товар</label>
+          <select id="offerItem">
+            <option value="fish">🐟 Рыба</option>
+            <option value="wood">🪵 Дерево</option>
+            <option value="cloth">🧵 Ткань</option>
+            <option value="grain">🌾 Зерно</option>
+            <option value="clay">🫙 Глина</option>
+          </select>
+        </div>
+        <div>
+          <label>Количество</label>
+          <input type="number" id="offerQty" min="1" max="10" value="1" style="width:100%">
+        </div>
+      </div>
+
+      <div class="half" id="offerShellsRow" style="display:none">
+        <div>
+          <label>+ ракушек отдаю</label>
+          <input type="number" id="offerShells" min="0" value="0" style="width:100%">
+        </div>
+        <div></div>
+      </div>
+
+      <div class="half">
+        <div>
+          <label>Я прошу — товар</label>
+          <select id="requestItem">
+            <option value="wood">🪵 Дерево</option>
+            <option value="fish">🐟 Рыба</option>
+            <option value="cloth">🧵 Ткань</option>
+            <option value="grain">🌾 Зерно</option>
+            <option value="clay">🫙 Глина</option>
+          </select>
+        </div>
+        <div>
+          <label>Количество</label>
+          <input type="number" id="requestQty" min="1" max="10" value="1" style="width:100%">
+        </div>
+      </div>
+
+      <div class="half" id="requestShellsRow" style="display:none">
+        <div>
+          <label>+ ракушек прошу</label>
+          <input type="number" id="requestShells" min="0" value="0" style="width:100%">
+        </div>
+        <div></div>
+      </div>
+
+      <button class="btn-green" onclick="sendOffer()" style="margin-top:.4rem">
+        📤 Отправить предложение
+      </button>
+      <span id="offerStatus" style="font-size:.82rem;margin-left:.5rem"></span>
+    </div>
+  </div>
+
+  <!-- Входящие предложения -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+      <h2 style="margin:0">Входящие предложения</h2>
+      <button class="btn-ghost" style="font-size:.78rem;padding:.25rem .6rem" onclick="loadPending()">↻</button>
+    </div>
+    <div id="pendingList"><span class="section-empty">Нет входящих предложений</span></div>
+  </div>
+
+  <!-- Лента событий -->
+  <div class="card">
+    <h2>Лента событий</h2>
+    <div id="eventLog"><span style="color:var(--muted)">Ожидание событий…</span></div>
+  </div>
+
+</div><!-- /gameSection -->
+
+<script>
+  // ── Состояние ─────────────────────────────────────────────────────────────
+  let state = {
+    playerId: null,
+    token:    null,
+    name:     null,
+    inventory: {},
+    goal:     {},
+    balance:  0,
+    ws:       null,
+    currency: false,
+    allPlayers: [],  // для выпадающего списка
+  };
+
+  const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay'];
+  const LABEL = { fish:'Рыба', wood:'Дерево', cloth:'Ткань', grain:'Зерно', clay:'Глина' };
+  const EMOJI = { fish:'🐟', wood:'🪵', cloth:'🧵', grain:'🌾', clay:'🫙' };
+
+  function base() { return document.getElementById('serverUrl').value.trim(); }
+
+  async function api(path, opts = {}) {
+    const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+    if (state.token) headers['x-player-token'] = state.token;
+    const r = await fetch(base() + path, { ...opts, headers });
+    return r.json();
+  }
+
+  // ── Вход ──────────────────────────────────────────────────────────────────
+
+  async function joinGame() {
+    const name = document.getElementById('nameInput').value.trim();
+    if (!name) return;
+
+    document.getElementById('loginError').textContent = '';
+
+    try {
+      const data = await api('/player/join', {
+        method: 'POST',
+        body:   JSON.stringify({ name }),
+      });
+
+      if (data.error) {
+        document.getElementById('loginError').textContent = data.error;
+        return;
+      }
+
+      state.playerId = data.playerId;
+      state.token    = data.token;
+      state.name     = name;
+      state.inventory = data.inventory;
+      state.goal      = data.goal;
+
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('gameSection').style.display  = 'block';
+      document.getElementById('playerNameDisplay').textContent = name;
+
+      connectWS();
+      await refresh();
+      await loadPending();
+    } catch (e) {
+      document.getElementById('loginError').textContent = 'Не удалось подключиться к серверу: ' + e.message;
+    }
+  }
+
+  // ── Обновить состояние игрока ─────────────────────────────────────────────
+
+  async function refresh() {
+    const [playerData, gameData] = await Promise.all([
+      api(`/player/${state.playerId}`),
+      api('/game/state'),
+    ]);
+
+    if (playerData && !playerData.error) {
+      state.inventory = playerData.inventory;
+      state.goal      = playerData.goal;
+      state.balance   = playerData.balance;
+
+      renderInventory();
+      renderGoal();
+
+      if (playerData.goalMet) {
+        document.getElementById('winnerBanner').style.display = 'block';
+      }
+    }
+
+    if (gameData && !gameData.error) {
+      state.currency = gameData.currencyEnabled;
+      state.allPlayers = (gameData.players || []).filter(p => p.id !== state.playerId);
+
+      document.getElementById('roundDisplay').textContent = gameData.round;
+      document.getElementById('currencyStatus').style.display = gameData.currencyEnabled ? '' : 'none';
+      document.getElementById('balanceDisplay').textContent = state.balance;
+
+      // Показать/скрыть поля с ракушками в форме сделки
+      document.getElementById('offerShellsRow').style.display   = gameData.currencyEnabled ? '' : 'none';
+      document.getElementById('requestShellsRow').style.display = gameData.currencyEnabled ? '' : 'none';
+
+      // Обновить список игроков для выбора получателя
+      renderPlayerSelect();
+    }
+  }
+
+  // ── Инвентарь ─────────────────────────────────────────────────────────────
+
+  function renderInventory() {
+    const grid = document.getElementById('inventoryGrid');
+    grid.innerHTML = '';
+    for (const g of GOODS) {
+      const qty      = state.inventory[g] || 0;
+      const required = state.goal[g];
+      let cls = 'good-tile';
+      if (required !== undefined) cls += qty >= required ? ' met' : ' needed';
+
+      const tile = document.createElement('div');
+      tile.className = cls;
+      tile.innerHTML = `
+        <span class="icon">${EMOJI[g]}</span>
+        <span class="qty">${qty}</span>
+        <span class="name">${LABEL[g]}</span>
+      `;
+      grid.appendChild(tile);
+    }
+  }
+
+  function renderGoal() {
+    const row = document.getElementById('goalRow');
+    row.innerHTML = '';
+    for (const [g, need] of Object.entries(state.goal)) {
+      const have = state.inventory[g] || 0;
+      const chip = document.createElement('span');
+      chip.className = `goal-chip ${have >= need ? 'met' : ''}`;
+      chip.textContent = `${EMOJI[g]} ${LABEL[g]}: ${have}/${need}`;
+      row.appendChild(chip);
+    }
+  }
+
+  function renderPlayerSelect() {
+    const sel = document.getElementById('toPlayerSelect');
+    const cur = sel.value;
+    sel.innerHTML = '';
+    if (state.allPlayers.length === 0) {
+      sel.innerHTML = '<option value="">Нет других игроков</option>';
+      return;
+    }
+    for (const p of state.allPlayers) {
+      const opt = document.createElement('option');
+      opt.value       = p.id;
+      opt.textContent = p.name;
+      if (p.id === cur) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  // ── Предложить сделку ─────────────────────────────────────────────────────
+
+  async function sendOffer() {
+    const toId = document.getElementById('toPlayerSelect').value;
+    if (!toId) { setOfferStatus('Выбери игрока', 'red'); return; }
+
+    const offer = {
+      item:   document.getElementById('offerItem').value,
+      qty:    Number(document.getElementById('offerQty').value),
+      shells: state.currency ? Number(document.getElementById('offerShells').value) : 0,
+    };
+    const request = {
+      item:   document.getElementById('requestItem').value,
+      qty:    Number(document.getElementById('requestQty').value),
+      shells: state.currency ? Number(document.getElementById('requestShells').value) : 0,
+    };
+
+    const data = await api('/trade/offer', {
+      method: 'POST',
+      body:   JSON.stringify({ fromId: state.playerId, toId, offer, request }),
+    });
+
+    if (data.error) {
+      setOfferStatus('Ошибка: ' + data.error, 'red');
+    } else {
+      setOfferStatus('Предложение отправлено!', 'green');
+      logEvent('сделка', `Предложение отправлено игроку`);
+    }
+  }
+
+  function setOfferStatus(msg, color) {
+    const el = document.getElementById('offerStatus');
+    el.textContent = msg;
+    el.style.color = color === 'red' ? 'var(--red)' : 'var(--accent)';
+    setTimeout(() => { el.textContent = ''; }, 3000);
+  }
+
+  // ── Входящие предложения ──────────────────────────────────────────────────
+
+  async function loadPending() {
+    const data = await api(`/trades/pending/${state.playerId}`);
+    const list = document.getElementById('pendingList');
+    list.innerHTML = '';
+
+    if (!data || !data.trades || data.trades.length === 0) {
+      list.innerHTML = '<span class="section-empty">Нет входящих предложений</span>';
+      return;
+    }
+
+    for (const t of data.trades) {
+      const div  = document.createElement('div');
+      div.className = 'trade-item';
+      div.id = `trade-${t.tradeId}`;
+
+      const offerText   = fmtSide(t.offer);
+      const requestText = fmtSide(t.request);
+
+      div.innerHTML = `
+        <div class="trade-header">От: ${escHtml(t.from.name)}</div>
+        <div class="trade-desc">
+          Они дают: <b>${offerText}</b><br>
+          Они просят: <b>${requestText}</b>
+        </div>
+        <div class="trade-btns">
+          <button class="btn-green" onclick="respondTrade('${t.tradeId}','accept')">✓ Принять</button>
+          <button class="btn-red"   onclick="respondTrade('${t.tradeId}','decline')">✗ Отклонить</button>
+        </div>
+      `;
+      list.appendChild(div);
+    }
+  }
+
+  async function respondTrade(tradeId, action) {
+    const data = await api(`/trade/${action}/${tradeId}`, { method: 'POST' });
+    if (data.error) {
+      logEvent('ошибка', data.error);
+    } else {
+      logEvent('сделка', action === 'accept' ? 'Сделка принята!' : 'Сделка отклонена');
+      document.getElementById(`trade-${tradeId}`)?.remove();
+      if (action === 'accept') await refresh();
+    }
+  }
+
+  // ── Лента событий ─────────────────────────────────────────────────────────
+
+  function logEvent(type, text) {
+    const log = document.getElementById('eventLog');
+    if (log.querySelector('span')) log.innerHTML = '';
+
+    const line = document.createElement('div');
+    line.innerHTML =
+      `<span class="ev-time">${new Date().toLocaleTimeString('ru')}</span>` +
+      `<b>[${escHtml(type)}]</b> ${escHtml(String(text))}`;
+    log.prepend(line);
+
+    while (log.children.length > 40) log.lastChild.remove();
+  }
+
+  // ── WebSocket ─────────────────────────────────────────────────────────────
+
+  function connectWS() {
+    const wsUrl = base().replace(/^http/, 'ws');
+    state.ws = new WebSocket(wsUrl);
+
+    state.ws.onopen = () => {
+      state.ws.send(JSON.stringify({ type: 'auth', token: state.token }));
+    };
+
+    state.ws.onmessage = async (e) => {
+      const d = JSON.parse(e.data);
+
+      if (d.type === 'auth_ok') {
+        document.getElementById('wsIndicator').className = 'dot dot-green';
+        document.getElementById('wsStatus').textContent  = 'Подключён';
+        return;
+      }
+
+      if (d.type === 'trade_offer') {
+        logEvent('📥 Предложение', `От ${d.from?.name}: ${fmtSide(d.offer)} → ${fmtSide(d.request)}`);
+        await loadPending();
+        return;
+      }
+
+      if (d.type === 'trade_accepted') {
+        logEvent('✅ Сделка принята', `Твой инвентарь обновлён`);
+        state.inventory = d.yourInventory || state.inventory;
+        renderInventory();
+        renderGoal();
+        if (d.goalMet) document.getElementById('winnerBanner').style.display = 'block';
+        await loadPending();
+        return;
+      }
+
+      if (d.type === 'trade_declined') {
+        logEvent('❌ Отклонено', `${d.declinedBy?.name} отклонил твоё предложение`);
+        return;
+      }
+
+      if (d.type === 'game_event') {
+        logEvent('⚡ Событие', d.message);
+        return;
+      }
+
+      if (d.type === 'currency_enabled') {
+        logEvent('🐚 Валюта', d.message);
+        await refresh();
+        return;
+      }
+
+      if (d.type === 'round_started') {
+        logEvent('▶ Раунд', d.message);
+        document.getElementById('winnerBanner').style.display = 'none';
+        await refresh();
+        await loadPending();
+        return;
+      }
+    };
+
+    state.ws.onclose = () => {
+      document.getElementById('wsIndicator').className = 'dot dot-red';
+      document.getElementById('wsStatus').textContent  = 'Отключён';
+      // Автопереподключение
+      setTimeout(connectWS, 4000);
+    };
+  }
+
+  // ── Утилиты ───────────────────────────────────────────────────────────────
+
+  function fmtSide(side) {
+    if (!side) return '—';
+    const parts = [];
+    if (side.item && side.qty > 0) {
+      parts.push(`${EMOJI[side.item] || ''} ${side.qty} ${LABEL[side.item] || side.item}`);
+    }
+    if (side.shells > 0) parts.push(`🐚 ${side.shells} ракушек`);
+    return parts.join(' + ') || '—';
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>

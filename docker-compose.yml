@@ -1,0 +1,15 @@
+services:
+  barter:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"       # меняй левую часть если порт занят, напр. "8080:3000"
+    volumes:
+      - barter-data:/data  # база сохраняется между перезапусками
+    environment:
+      - PORT=3000
+      - DB_PATH=/data/barter.db
+      - ADMIN_KEY=${ADMIN_KEY:-barter-teacher-secret}  # берётся из .env или дефолт
+
+volumes:
+  barter-data:

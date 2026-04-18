@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Остров бартера — Панель учителя</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --border:   #2a2d3d;
+      --accent:   #6c8fff;
+      --green:    #3ecf8e;
+      --red:      #ff6b6b;
+      --yellow:   #ffd166;
+      --text:     #e2e8f0;
+      --muted:    #6b7280;
+      --radius:   8px;
+      --font:     'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background:  var(--bg);
+      color:       var(--text);
+      min-height:  100vh;
+      padding:     1rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 { font-size: 1.4rem; }
+    header h1 span { color: var(--accent); }
+
+    .status-bar {
+      display: flex;
+      gap: 1rem;
+      font-size: .82rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+    .status-bar b { color: var(--text); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .col-full { grid-column: 1 / -1; }
+
+    .card {
+      background:    var(--surface);
+      border:        1px solid var(--border);
+      border-radius: var(--radius);
+      padding:       1rem;
+    }
+
+    .card h2 {
+      font-size:      .9rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color:          var(--muted);
+      margin-bottom:  .75rem;
+    }
+
+    .controls {
+      display:   flex;
+      flex-wrap: wrap;
+      gap:       .5rem;
+      align-items: center;
+    }
+
+    input[type="text"], input[type="password"] {
+      background:    var(--bg);
+      border:        1px solid var(--border);
+      border-radius: var(--radius);
+      color:         var(--text);
+      padding:       .4rem .7rem;
+      font-size:     .85rem;
+      outline:       none;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: var(--accent);
+    }
+    input.wide { width: 260px; }
+
+    button {
+      padding:       .4rem .9rem;
+      border:        none;
+      border-radius: var(--radius);
+      font-size:     .85rem;
+      font-weight:   600;
+      cursor:        pointer;
+      transition:    opacity .15s;
+    }
+    button:hover    { opacity: .85; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-primary { background: var(--accent);  color: #fff; }
+    .btn-green   { background: var(--green);   color: #fff; }
+    .btn-red     { background: var(--red);     color: #fff; }
+    .btn-yellow  { background: var(--yellow);  color: #111; }
+    .btn-ghost   { background: transparent;    color: var(--muted);
+                   border: 1px solid var(--border); }
+
+    #playerGrid {
+      display:               grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap:                   .75rem;
+    }
+
+    .player-card {
+      background:    var(--bg);
+      border:        1px solid var(--border);
+      border-radius: var(--radius);
+      padding:       .75rem;
+      transition:    border-color .2s;
+    }
+    .player-card.goal-met   { border-color: var(--green); }
+    .player-card.goal-close { border-color: var(--yellow); }
+
+    .player-name {
+      font-weight:     700;
+      font-size:       .95rem;
+      display:         flex;
+      justify-content: space-between;
+      align-items:     center;
+      margin-bottom:   .5rem;
+    }
+
+    .badge {
+      font-size:     .7rem;
+      padding:       .15rem .45rem;
+      border-radius: 99px;
+      font-weight:   600;
+    }
+    .badge-green  { background: rgba(62,207,142,.15); color: var(--green); }
+    .badge-yellow { background: rgba(255,209,102,.15); color: var(--yellow); }
+    .badge-muted  { background: rgba(107,114,128,.15); color: var(--muted); }
+
+    .goods-row {
+      display:       flex;
+      flex-wrap:     wrap;
+      gap:           .3rem;
+      margin-bottom: .4rem;
+    }
+
+    .good-chip {
+      font-size:     .75rem;
+      padding:       .1rem .4rem;
+      border-radius: 4px;
+      background:    var(--surface);
+      border:        1px solid var(--border);
+    }
+    .good-chip.need { border-color: var(--yellow); color: var(--yellow); }
+    .good-chip.met  { border-color: var(--green);  color: var(--green);  }
+
+    .player-meta {
+      font-size: .75rem;
+      color:     var(--muted);
+      display:   flex;
+      gap:       .5rem;
+      flex-wrap: wrap;
+    }
+
+    .trade-table {
+      width:            100%;
+      border-collapse:  collapse;
+      font-size:        .82rem;
+    }
+    .trade-table th {
+      text-align:     left;
+      padding:        .4rem .5rem;
+      color:          var(--muted);
+      border-bottom:  1px solid var(--border);
+      font-weight:    600;
+      font-size:      .75rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .trade-table td {
+      padding:       .4rem .5rem;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      vertical-align: middle;
+    }
+    .trade-table tr:last-child td { border-bottom: none; }
+
+    .status-pill {
+      font-size:     .7rem;
+      padding:       .1rem .45rem;
+      border-radius: 99px;
+      font-weight:   700;
+    }
+    .status-pending  { background: rgba(108,143,255,.15); color: var(--accent); }
+    .status-accepted { background: rgba(62,207,142,.15);  color: var(--green);  }
+    .status-declined { background: rgba(255,107,107,.15); color: var(--red);    }
+
+    #eventLog {
+      height:      200px;
+      overflow-y:  auto;
+      font-size:   .78rem;
+      font-family: monospace;
+      color:       var(--muted);
+      line-height: 1.6;
+    }
+    #eventLog .ev-time { color: var(--border); margin-right: .4rem; }
+    #eventLog .ev-type { color: var(--accent); margin-right: .3rem; }
+
+    .dot {
+      display:       inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right:  .35rem;
+    }
+    .dot-green { background: var(--green); }
+    .dot-red   { background: var(--red);   }
+
+    .empty { color: var(--muted); font-size: .85rem; padding: .5rem 0; }
+
+    @keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } }
+    .new { animation: fadeIn .3s ease; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🪸 Остров бартера <span>Панель учителя</span></h1>
+  <div class="status-bar">
+    <span><span id="wsIndicator" class="dot dot-red"></span>WebSocket</span>
+    <span>Раунд: <b id="hRound">—</b></span>
+    <span>Валюта: <b id="hCurrency">—</b></span>
+    <span>Игроки: <b id="hPlayers">—</b></span>
+    <span>Онлайн: <b id="hConnected">—</b></span>
+    <span style="color:var(--muted);font-size:.78rem">Обновление: 3 сек</span>
+  </div>
+</header>
+
+<!-- Подключение -->
+<div class="card col-full" style="margin-bottom:1rem">
+  <h2>Подключение</h2>
+  <div class="controls">
+    <input type="text"     id="serverUrl" class="wide" value="http://localhost:3000" placeholder="Адрес сервера">
+    <input type="password" id="adminKey"  class="wide" value="barter-teacher-secret" placeholder="Ключ учителя">
+    <button class="btn-primary" onclick="startDashboard()">Подключиться</button>
+    <button class="btn-ghost"   onclick="stopDashboard()">Отключиться</button>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- Управление игрой -->
+  <div class="card">
+    <h2>Управление игрой</h2>
+    <div class="controls" style="flex-direction:column; align-items:flex-start; gap:.6rem">
+
+      <button class="btn-green" onclick="adminAction('start-round')">
+        ▶ Начать / следующий раунд
+      </button>
+
+      <button class="btn-yellow" id="btnCurrency" onclick="adminAction('enable-currency')">
+        🐚 Ввести ракушки (валюту)
+      </button>
+
+      <div class="controls" style="width:100%; gap:.4rem">
+        <input type="text" id="eventMsg" class="wide"
+               placeholder="Сообщение всем игрокам…"
+               onkeydown="if(event.key==='Enter') sendEvent()">
+        <button class="btn-red" onclick="sendEvent()">⚡ Отправить</button>
+      </div>
+
+      <div style="font-size:.78rem; color:var(--muted); line-height:1.6">
+        Сценарий: «Начать раунд» → ученики торгуются →<br>
+        «Ввести ракушки» → рынок оживляется.
+      </div>
+    </div>
+  </div>
+
+  <!-- Лента событий -->
+  <div class="card">
+    <h2>Лента событий (WebSocket)</h2>
+    <div id="eventLog"><span class="empty">Ожидание подключения…</span></div>
+  </div>
+
+  <!-- Игроки -->
+  <div class="card col-full">
+    <h2>Игроки — инвентари и цели</h2>
+    <div id="playerGrid"><span class="empty">Пока никто не зашёл.</span></div>
+  </div>
+
+  <!-- Сделки -->
+  <div class="card col-full">
+    <h2>История сделок</h2>
+    <div style="overflow-x:auto">
+      <table class="trade-table">
+        <thead>
+          <tr>
+            <th>Статус</th>
+            <th>От кого</th>
+            <th>Предлагает</th>
+            <th>→</th>
+            <th>Кому</th>
+            <th>Просит</th>
+            <th>Когда</th>
+          </tr>
+        </thead>
+        <tbody id="tradeBody">
+          <tr><td colspan="7" class="empty">Сделок пока нет.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<script>
+  let pollTimer = null;
+  let ws        = null;
+  let currencyEnabled = false;
+
+  const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay'];
+  const LABEL = { fish:'рыба', wood:'дерево', cloth:'ткань', grain:'зерно', clay:'глина' };
+  const EMOJI = { fish:'🐟', wood:'🪵', cloth:'🧵', grain:'🌾', clay:'🫙', shells:'🐚' };
+  const STATUS_RU = { pending:'ожидает', accepted:'принята', declined:'отклонена' };
+
+  function base()     { return document.getElementById('serverUrl').value.trim(); }
+  function adminKey() { return document.getElementById('adminKey').value.trim(); }
+  function adminHeaders() {
+    return { 'Content-Type': 'application/json', 'x-admin-key': adminKey() };
+  }
+
+  async function apiFetch(path, opts = {}) {
+    try {
+      const r = await fetch(base() + path, opts);
+      return await r.json();
+    } catch (e) {
+      logEvent('ошибка', e.message);
+      return null;
+    }
+  }
+
+  function fmtSide(side) {
+    if (!side) return '—';
+    const parts = [];
+    if (side.item && side.qty > 0) {
+      parts.push(`${EMOJI[side.item] || '?'} ${side.qty} ${LABEL[side.item] || side.item}`);
+    }
+    if (side.shells > 0) parts.push(`🐚 ${side.shells} ракушек`);
+    return parts.join(' + ') || '—';
+  }
+
+  function timeAgo(unixSec) {
+    const s = Math.floor(Date.now() / 1000) - unixSec;
+    if (s < 60)   return `${s} сек назад`;
+    if (s < 3600) return `${Math.floor(s / 60)} мин назад`;
+    return `${Math.floor(s / 3600)} ч назад`;
+  }
+
+  // ── Лента событий ────────────────────────────────────────────────────────
+
+  function logEvent(type, text) {
+    const log = document.getElementById('eventLog');
+    const was = log.querySelector('.empty');
+    if (was) was.remove();
+
+    const line = document.createElement('div');
+    line.className = 'new';
+    line.innerHTML =
+      `<span class="ev-time">${new Date().toLocaleTimeString('ru')}</span>` +
+      `<span class="ev-type">[${escHtml(type)}]</span>${escHtml(String(text))}`;
+    log.prepend(line);
+
+    while (log.children.length > 80) log.lastChild.remove();
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Карточки игроков ─────────────────────────────────────────────────────
+
+  function renderPlayers(players) {
+    const grid = document.getElementById('playerGrid');
+    grid.innerHTML = '';
+
+    if (!players || players.length === 0) {
+      grid.innerHTML = '<span class="empty">Пока никто не зашёл.</span>';
+      return;
+    }
+
+    for (const p of players) {
+      const inv      = p.inventory || {};
+      const goal     = p.goal      || {};
+      const goalKeys = Object.keys(goal);
+      const metCount = goalKeys.filter(g => (inv[g] || 0) >= goal[g]).length;
+      const isClose  = metCount === goalKeys.length - 1 && goalKeys.length > 1;
+      const isMet    = p.goalMet;
+
+      const goodsChips = GOODS.map(g => {
+        const qty      = inv[g] || 0;
+        const required = goal[g];
+        let cls = 'good-chip';
+        if (required !== undefined) cls += qty >= required ? ' met' : ' need';
+        return `<span class="${cls}" title="${LABEL[g]}">${EMOJI[g]}${qty}</span>`;
+      }).join('');
+
+      const goalChips = goalKeys.map(g => {
+        const have = inv[g] || 0;
+        const need = goal[g];
+        return `<span class="good-chip ${have >= need ? 'met' : 'need'}" title="${LABEL[g]}">
+          ${EMOJI[g]}${have}/${need}
+        </span>`;
+      }).join('');
+
+      const badge = isMet
+        ? '<span class="badge badge-green">✓ Цель достигнута</span>'
+        : isClose
+          ? '<span class="badge badge-yellow">Почти!</span>'
+          : '<span class="badge badge-muted">В процессе</span>';
+
+      const card = document.createElement('div');
+      card.className = `player-card ${isMet ? 'goal-met' : isClose ? 'goal-close' : ''} new`;
+      card.innerHTML = `
+        <div class="player-name">
+          <span>${escHtml(p.name)}</span>
+          ${badge}
+        </div>
+        <div class="goods-row" title="Инвентарь">${goodsChips}</div>
+        <div style="font-size:.72rem; color:var(--muted); margin-bottom:.35rem">
+          Цель: <span style="display:inline-flex;gap:.2rem;flex-wrap:wrap">${goalChips}</span>
+        </div>
+        <div class="player-meta">
+          ${currencyEnabled ? `<span>🐚 ${p.balance} ракушек</span>` : ''}
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+  }
+
+  // ── Таблица сделок ────────────────────────────────────────────────────────
+
+  function renderTrades(trades) {
+    const tbody = document.getElementById('tradeBody');
+    tbody.innerHTML = '';
+
+    if (!trades || trades.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">Сделок пока нет.</td></tr>';
+      return;
+    }
+
+    for (const t of trades) {
+      const statusRu = STATUS_RU[t.status] || t.status;
+      const pill = `<span class="status-pill status-${t.status}">${statusRu}</span>`;
+      const tr   = document.createElement('tr');
+      tr.className = 'new';
+      tr.innerHTML = `
+        <td>${pill}</td>
+        <td>${escHtml(t.from.name)}</td>
+        <td>${fmtSide(t.offer)}</td>
+        <td style="color:var(--muted)">→</td>
+        <td>${escHtml(t.to.name)}</td>
+        <td>${fmtSide(t.request)}</td>
+        <td style="color:var(--muted);white-space:nowrap">${timeAgo(t.createdAt)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  // ── Опрос API ─────────────────────────────────────────────────────────────
+
+  async function poll() {
+    const [stateData, playersData, tradesData] = await Promise.all([
+      apiFetch('/game/state'),
+      apiFetch('/admin/players', { headers: adminHeaders() }),
+      apiFetch('/admin/trades',  { headers: adminHeaders() }),
+    ]);
+
+    if (stateData) {
+      currencyEnabled = stateData.currencyEnabled;
+      document.getElementById('hRound').textContent     = stateData.round || 0;
+      document.getElementById('hCurrency').textContent  = stateData.currencyEnabled ? '🐚 Да' : 'Нет';
+      document.getElementById('hPlayers').textContent   = stateData.players?.length || 0;
+      document.getElementById('hConnected').textContent = stateData.connectedPlayers || 0;
+      document.getElementById('btnCurrency').disabled   = stateData.currencyEnabled;
+    }
+
+    if (playersData) renderPlayers(playersData.players);
+    if (tradesData)  renderTrades(tradesData.trades);
+  }
+
+  // ── WebSocket ─────────────────────────────────────────────────────────────
+
+  function connectWS() {
+    const wsUrl = base().replace(/^http/, 'ws');
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      document.getElementById('wsIndicator').className = 'dot dot-green';
+      logEvent('ws', 'Подключён — слушаю широковещательные события');
+    };
+
+    ws.onmessage = (e) => {
+      const d = JSON.parse(e.data);
+      if (d.type === 'error') return;
+
+      logEvent(d.type, d.message || JSON.stringify(d));
+
+      if (['round_started', 'currency_enabled', 'trade_accepted'].includes(d.type)) {
+        poll();
+      }
+    };
+
+    ws.onclose = () => {
+      document.getElementById('wsIndicator').className = 'dot dot-red';
+      logEvent('ws', 'Соединение закрыто');
+      // Попытка переподключения через 5 сек
+      setTimeout(() => { if (pollTimer) connectWS(); }, 5000);
+    };
+  }
+
+  // ── Действия учителя ──────────────────────────────────────────────────────
+
+  async function adminAction(action) {
+    const data = await apiFetch(`/admin/${action}`, {
+      method:  'POST',
+      headers: adminHeaders(),
+    });
+    if (data) {
+      logEvent(action, data.message || data.error || JSON.stringify(data));
+      await poll();
+    }
+  }
+
+  async function sendEvent() {
+    const msg = document.getElementById('eventMsg').value.trim();
+    if (!msg) return;
+
+    const data = await apiFetch('/admin/trigger-event', {
+      method:  'POST',
+      headers: adminHeaders(),
+      body:    JSON.stringify({ message: msg }),
+    });
+
+    if (data) {
+      document.getElementById('eventMsg').value = '';
+      logEvent('событие', msg);
+    }
+  }
+
+  // ── Старт / стоп ──────────────────────────────────────────────────────────
+
+  function startDashboard() {
+    if (pollTimer) stopDashboard();
+    connectWS();
+    poll();
+    pollTimer = setInterval(poll, 3000);
+    logEvent('дашборд', `Подключение к ${base()}`);
+  }
+
+  function stopDashboard() {
+    clearInterval(pollTimer);
+    pollTimer = null;
+    if (ws) { ws.close(); ws = null; }
+    document.getElementById('wsIndicator').className = 'dot dot-red';
+  }
+
+  window.addEventListener('load', startDashboard);
+</script>
+</body>
+</html>

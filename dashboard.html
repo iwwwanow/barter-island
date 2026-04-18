@@ -281,6 +281,13 @@
         <button class="btn-red" onclick="sendEvent()">⚡ Отправить</button>
       </div>
 
+      <hr style="border:none;border-top:1px solid var(--border);width:100%">
+
+      <button class="btn-ghost" onclick="resetGame()"
+              style="color:var(--red);border-color:var(--red);font-size:.8rem">
+        🗑 Сбросить всю игру
+      </button>
+
       <div style="font-size:.78rem; color:var(--muted); line-height:1.6">
         Сценарий: «Начать раунд» → ученики торгуются →<br>
         «Ввести ракушки» → рынок оживляется.
@@ -556,6 +563,19 @@
     if (data) {
       document.getElementById('eventMsg').value = '';
       logEvent('событие', msg);
+    }
+  }
+
+  async function resetGame() {
+    if (!confirm('Сбросить всю игру? Все игроки и сделки будут удалены.')) return;
+    const data = await apiFetch('/admin/reset', {
+      method:  'POST',
+      headers: adminHeaders(),
+      body:    JSON.stringify({ confirm: 'yes' }),
+    });
+    if (data) {
+      logEvent('сброс', data.message || data.error);
+      await poll();
     }
   }
 

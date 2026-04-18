@@ -150,6 +150,38 @@ router.post('/trigger-event', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /admin/reset
+// ---------------------------------------------------------------------------
+
+/**
+ * Полный сброс игры: удаляет всех игроков, все сделки,
+ * обнуляет счётчик раундов и флаг валюты.
+ *
+ * Используй между занятиями или когда нужно начать с чистого листа.
+ * Требует подтверждения в теле запроса: { "confirm": "yes" }
+ */
+router.post('/reset', (req, res) => {
+  if (req.body?.confirm !== 'yes') {
+    return res.status(400).json({
+      error: 'Добавь { "confirm": "yes" } в тело запроса для подтверждения',
+    });
+  }
+
+  const reset = db.transaction(() => {
+    db.prepare('DELETE FROM trades').run();
+    db.prepare('DELETE FROM players').run();
+    db.prepare('UPDATE game_state SET round = 0, currency_enabled = 0, started_at = NULL WHERE id = 1').run();
+  });
+  reset();
+
+  broadcast('game_event', {
+    message: 'Сервер сброшен. Войдите заново через /player/join.',
+  });
+
+  res.json({ message: 'Игра полностью сброшена' });
+});
+
+// ---------------------------------------------------------------------------
 // GET /admin/players
 // ---------------------------------------------------------------------------
 

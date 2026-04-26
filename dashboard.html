@@ -242,6 +242,7 @@
     <span><span id="wsIndicator" class="dot dot-red"></span>WebSocket</span>
     <span>Раунд: <b id="hRound">—</b></span>
     <span>Валюта: <b id="hCurrency">—</b></span>
+    <span>Ресурсов: <b id="hResourceQty">—</b></span>
     <span>Игроки: <b id="hPlayers">—</b></span>
     <span>Онлайн: <b id="hConnected">—</b></span>
     <span style="color:var(--muted);font-size:.78rem">Обновление: 3 сек</span>
@@ -266,7 +267,17 @@
     <h2>Управление игрой</h2>
     <div class="controls" style="flex-direction:column; align-items:flex-start; gap:.6rem">
 
-      <button class="btn-green" onclick="adminAction('start-round')">
+      <div class="controls" style="gap:.4rem;align-items:center">
+        <label style="font-size:.82rem;color:var(--muted)">Ресурсов на старте:</label>
+        <select id="resourceQty" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:.35rem .6rem;font-size:.85rem">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+
+      <button class="btn-green" onclick="startRound()">
         ▶ Начать / следующий раунд
       </button>
 
@@ -337,9 +348,11 @@
   let ws        = null;
   let currencyEnabled = false;
 
-  const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay'];
-  const LABEL = { fish:'рыба', wood:'дерево', cloth:'ткань', grain:'зерно', clay:'глина' };
-  const EMOJI = { fish:'🐟', wood:'🪵', cloth:'🧵', grain:'🌾', clay:'🫙', shells:'🐚' };
+  const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay', 'metal', 'stone', 'wool', 'herbs', 'oil'];
+  const LABEL = { fish:'рыба', wood:'дерево', cloth:'ткань', grain:'зерно', clay:'глина',
+                  metal:'металл', stone:'камень', wool:'шерсть', herbs:'травы', oil:'масло' };
+  const EMOJI = { fish:'🐟', wood:'🪵', cloth:'🧵', grain:'🌾', clay:'🫙',
+                  metal:'⚙️', stone:'🪨', wool:'🐑', herbs:'🌿', oil:'🫒', shells:'🐚' };
   const STATUS_RU = { pending:'ожидает', accepted:'принята', declined:'отклонена' };
 
   function base()     { return document.getElementById('serverUrl').value.trim(); }
@@ -496,11 +509,15 @@
 
     if (stateData) {
       currencyEnabled = stateData.currencyEnabled;
-      document.getElementById('hRound').textContent     = stateData.round || 0;
-      document.getElementById('hCurrency').textContent  = stateData.currencyEnabled ? '🐚 Да' : 'Нет';
-      document.getElementById('hPlayers').textContent   = stateData.players?.length || 0;
-      document.getElementById('hConnected').textContent = stateData.connectedPlayers || 0;
-      document.getElementById('btnCurrency').disabled   = stateData.currencyEnabled;
+      document.getElementById('hRound').textContent       = stateData.round || 0;
+      document.getElementById('hCurrency').textContent    = stateData.currencyEnabled ? '🐚 Да' : 'Нет';
+      document.getElementById('hResourceQty').textContent = stateData.resourceQty || 5;
+      document.getElementById('hPlayers').textContent     = stateData.players?.length || 0;
+      document.getElementById('hConnected').textContent   = stateData.connectedPlayers || 0;
+      document.getElementById('btnCurrency').disabled     = stateData.currencyEnabled;
+      // Sync the selector to match what the server reports
+      const sel = document.getElementById('resourceQty');
+      if (sel) sel.value = String(stateData.resourceQty || 5);
     }
 
     if (playersData) renderPlayers(playersData.players);
@@ -538,6 +555,19 @@
   }
 
   // ── Действия учителя ──────────────────────────────────────────────────────
+
+  async function startRound() {
+    const qty = Number(document.getElementById('resourceQty').value);
+    const data = await apiFetch('/admin/start-round', {
+      method:  'POST',
+      headers: adminHeaders(),
+      body:    JSON.stringify({ resourceQty: qty }),
+    });
+    if (data) {
+      logEvent('start-round', data.message || data.error || JSON.stringify(data));
+      await poll();
+    }
+  }
 
   async function adminAction(action) {
     const data = await apiFetch(`/admin/${action}`, {

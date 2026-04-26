@@ -5,8 +5,8 @@
  * for students to read, test, and modify the rules independently.
  */
 
-// The five tradeable goods in the game
-const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay'];
+// All tradeable goods in the game
+const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay', 'metal', 'stone', 'wool', 'herbs', 'oil'];
 
 // ---------------------------------------------------------------------------
 // Inventory generation
@@ -14,15 +14,20 @@ const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay'];
 
 /**
  * Generate a random starting inventory for one player.
- * Each good gets 2–4 units, so players have something to trade
- * but not everything they need.
  *
- * Returns: { fish: 3, wood: 2, cloth: 4, grain: 2, clay: 3 }
+ * @param {number} maxQty  - Maximum units per good (one of 5, 10, 20, 100).
+ *                           Controls the "richness" of the round.
+ *
+ * The min is set to ~40% of max so players always have something but
+ * must still trade to reach their goals.
+ *
+ * Returns: { fish: 3, wood: 2, cloth: 4, grain: 2, clay: 3, ... }
  */
-function randomInventory() {
+function randomInventory(maxQty = 5) {
+  const minQty = Math.max(2, Math.floor(maxQty * 0.4));
   const inv = {};
   for (const good of GOODS) {
-    inv[good] = randInt(2, 4);
+    inv[good] = randInt(minQty, maxQty);
   }
   return inv;
 }

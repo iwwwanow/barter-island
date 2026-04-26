@@ -79,7 +79,8 @@
       gap:                   .5rem;
       margin-bottom:         .75rem;
     }
-    @media (max-width: 480px) { .goods-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 600px) { .goods-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 400px) { .goods-grid { grid-template-columns: repeat(3, 1fr); } }
 
     .good-tile {
       background:    var(--bg);
@@ -241,6 +242,11 @@
             <option value="cloth">🧵 Ткань</option>
             <option value="grain">🌾 Зерно</option>
             <option value="clay">🫙 Глина</option>
+            <option value="metal">⚙️ Металл</option>
+            <option value="stone">🪨 Камень</option>
+            <option value="wool">🐑 Шерсть</option>
+            <option value="herbs">🌿 Травы</option>
+            <option value="oil">🫒 Масло</option>
           </select>
         </div>
         <div>
@@ -266,6 +272,11 @@
             <option value="cloth">🧵 Ткань</option>
             <option value="grain">🌾 Зерно</option>
             <option value="clay">🫙 Глина</option>
+            <option value="metal">⚙️ Металл</option>
+            <option value="stone">🪨 Камень</option>
+            <option value="wool">🐑 Шерсть</option>
+            <option value="herbs">🌿 Травы</option>
+            <option value="oil">🫒 Масло</option>
           </select>
         </div>
         <div>
@@ -320,9 +331,11 @@
     allPlayers: [],  // для выпадающего списка
   };
 
-  const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay'];
-  const LABEL = { fish:'Рыба', wood:'Дерево', cloth:'Ткань', grain:'Зерно', clay:'Глина' };
-  const EMOJI = { fish:'🐟', wood:'🪵', cloth:'🧵', grain:'🌾', clay:'🫙' };
+  const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay', 'metal', 'stone', 'wool', 'herbs', 'oil'];
+  const LABEL = { fish:'Рыба', wood:'Дерево', cloth:'Ткань', grain:'Зерно', clay:'Глина',
+                  metal:'Металл', stone:'Камень', wool:'Шерсть', herbs:'Травы', oil:'Масло' };
+  const EMOJI = { fish:'🐟', wood:'🪵', cloth:'🧵', grain:'🌾', clay:'🫙',
+                  metal:'⚙️', stone:'🪨', wool:'🐑', herbs:'🌿', oil:'🫒' };
 
   function base() { return document.getElementById('serverUrl').value.trim(); }
 

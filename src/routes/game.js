@@ -54,6 +54,7 @@ router.get('/state', (req, res) => {
   res.json({
     round:            state.round,
     currencyEnabled:  state.currency_enabled === 1,
+    resourceQty:      state.resource_qty || 5,
     connectedPlayers: connectedCount(),
     players:          playerSummaries,
   });

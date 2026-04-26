@@ -58,6 +58,11 @@ db.exec(`
   VALUES (1, 0, 0);
 `);
 
+// Add resource_qty column if it was created before this migration
+try {
+  db.exec(`ALTER TABLE game_state ADD COLUMN resource_qty INTEGER NOT NULL DEFAULT 5`);
+} catch { /* column already exists — safe to ignore */ }
+
 // ---------------------------------------------------------------------------
 // Convenience helpers
 // ---------------------------------------------------------------------------

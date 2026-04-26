@@ -41,10 +41,22 @@ router.post('/start-round', (req, res) => {
     return res.status(400).json({ error: 'No players have joined yet' });
   }
 
+  // Validate optional resourceQty parameter (must be one of the allowed presets)
+  const ALLOWED_QTY = [5, 10, 20, 100];
+  const bodyQty = Number(req.body?.resourceQty);
+  const resourceQty = ALLOWED_QTY.includes(bodyQty) ? bodyQty : null;
+
   // Atomically update everyone
   const startRound = db.transaction(() => {
+    // Persist resourceQty if provided; otherwise keep whatever is stored
+    if (resourceQty !== null) {
+      db.prepare(`UPDATE game_state SET resource_qty = ? WHERE id = 1`).run(resourceQty);
+    }
+
+    const { resource_qty } = db.prepare('SELECT resource_qty FROM game_state WHERE id = 1').get();
+
     for (const player of players) {
-      const inventory = randomInventory();
+      const inventory = randomInventory(resource_qty);
       const goal      = randomGoal(inventory);
 
       db.prepare(`

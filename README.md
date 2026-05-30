@@ -9,6 +9,20 @@ introduces a shell currency — illustrating why money exists and how it solves 
 
 ---
 
+## Production Deploy (on server)
+
+```bash
+# Download the compose file
+curl -O https://raw.githubusercontent.com/iwwwanow/barter-island/master/docker-compose.prod.yml
+
+# Run it (set your admin key)
+ADMIN_KEY=your-secret docker compose -f docker-compose.prod.yml up -d
+```
+
+Server will be available on port `3001`.
+
+---
+
 ## Quick Start
 
 ```bash

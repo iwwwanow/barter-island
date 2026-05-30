@@ -1,0 +1,15 @@
+services:
+  barter:
+    image: ghcr.io/iwwwanow/barter-island:sha-4ea9ac9
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - barter-data:/data
+    environment:
+      - PORT=3000
+      - DB_PATH=/data/barter.db
+      - ADMIN_KEY=${ADMIN_KEY:?ADMIN_KEY must be set}
+
+volumes:
+  barter-data:

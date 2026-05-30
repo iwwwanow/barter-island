@@ -175,7 +175,7 @@
 
 <!-- ── Вход ──────────────────────────────────────────────────────────────── -->
 <div id="loginSection" class="card">
-  <h1>🪸 Остров бартера</h1>
+  <h1>🌴 Остров бартера</h1>
   <p style="color:var(--muted);margin:.5rem 0 1rem">Введи адрес сервера и своё имя, чтобы войти в игру.</p>
 
   <div class="row" style="margin-bottom:.5rem">
@@ -193,7 +193,7 @@
 <div id="gameSection" style="display:none">
 
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
-    <h1>🪸 <span id="playerNameDisplay"></span></h1>
+    <h1>🌴 <span id="playerNameDisplay"></span></h1>
     <div style="font-size:.82rem;color:var(--muted)">
       <span id="wsIndicator" class="dot dot-red"></span>
       <span id="wsStatus">Не подключён</span>
@@ -238,15 +238,15 @@
           <label>Я отдаю — товар</label>
           <select id="offerItem">
             <option value="fish">🐟 Рыба</option>
-            <option value="wood">🪵 Дерево</option>
+            <option value="wood">🌲 Дерево</option>
             <option value="cloth">🧵 Ткань</option>
             <option value="grain">🌾 Зерно</option>
-            <option value="clay">🫙 Глина</option>
+            <option value="clay">🏺 Глина</option>
             <option value="metal">⚙️ Металл</option>
-            <option value="stone">🪨 Камень</option>
+            <option value="stone">⛰ Камень</option>
             <option value="wool">🐑 Шерсть</option>
             <option value="herbs">🌿 Травы</option>
-            <option value="oil">🫒 Масло</option>
+            <option value="oil">🍃 Масло</option>
           </select>
         </div>
         <div>
@@ -267,16 +267,16 @@
         <div>
           <label>Я прошу — товар</label>
           <select id="requestItem">
-            <option value="wood">🪵 Дерево</option>
+            <option value="wood">🌲 Дерево</option>
             <option value="fish">🐟 Рыба</option>
             <option value="cloth">🧵 Ткань</option>
             <option value="grain">🌾 Зерно</option>
-            <option value="clay">🫙 Глина</option>
+            <option value="clay">🏺 Глина</option>
             <option value="metal">⚙️ Металл</option>
-            <option value="stone">🪨 Камень</option>
+            <option value="stone">⛰ Камень</option>
             <option value="wool">🐑 Шерсть</option>
             <option value="herbs">🌿 Травы</option>
-            <option value="oil">🫒 Масло</option>
+            <option value="oil">🍃 Масло</option>
           </select>
         </div>
         <div>
@@ -334,8 +334,8 @@
   const GOODS = ['fish', 'wood', 'cloth', 'grain', 'clay', 'metal', 'stone', 'wool', 'herbs', 'oil'];
   const LABEL = { fish:'Рыба', wood:'Дерево', cloth:'Ткань', grain:'Зерно', clay:'Глина',
                   metal:'Металл', stone:'Камень', wool:'Шерсть', herbs:'Травы', oil:'Масло' };
-  const EMOJI = { fish:'🐟', wood:'🪵', cloth:'🧵', grain:'🌾', clay:'🫙',
-                  metal:'⚙️', stone:'🪨', wool:'🐑', herbs:'🌿', oil:'🫒' };
+  const EMOJI = { fish:'🐟', wood:'🌲', cloth:'🧵', grain:'🌾', clay:'🏺',
+                  metal:'⚙️', stone:'⛰', wool:'🐑', herbs:'🌿', oil:'🍃' };
 
   function base() { return document.getElementById('serverUrl').value.trim(); }
 
